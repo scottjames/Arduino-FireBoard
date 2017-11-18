@@ -51,7 +51,7 @@ void loop() {
 
 void Fireplace () {
   static unsigned int spark[WIDTH]; // base heat
-  static unsigned int last[WIDTH]; // last value
+  static unsigned int last[WIDTH]; // last value, for averaging to make smoother/slower flames.
   CRGB stack[WIDTH][HEIGHT];        // stacks that are cooler
  
   // 1. Generate sparks to re-heat
