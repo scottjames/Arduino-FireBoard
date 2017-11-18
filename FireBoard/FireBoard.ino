@@ -4,7 +4,7 @@
 #define CONTROL_PIN 6
 
 /* Board shape and size configuration. Sheild is 8x5, 40 pixels */
-#define HEIGHT 5
+#define HEIGHT 8
 #define WIDTH 8
 #define NUM_LEDS HEIGHT*WIDTH
 
@@ -26,7 +26,8 @@ void setup() {
 
 /* Refresh rate. Higher makes for flickerier
    Recommend small values for small displays */
-#define FPS 17
+//#define FPS 17
+#define FPS 6
 #define FPS_DELAY 1000/FPS
 
 void loop() {
@@ -40,27 +41,31 @@ void loop() {
 
 /* Rate of cooling. Play with to change fire from
    roaring (smaller values) to weak (larger values) */
-#define COOLING 55  
+//#define COOLING 55  
+#define COOLING 165  
 
 /* How hot is "hot"? Increase for brighter fire */
-#define HOT 180
+//#define HOT 180
+#define HOT 100
 #define MAXHOT HOT*HEIGHT
 
 void Fireplace () {
   static unsigned int spark[WIDTH]; // base heat
+  static unsigned int last[WIDTH]; // last value
   CRGB stack[WIDTH][HEIGHT];        // stacks that are cooler
  
   // 1. Generate sparks to re-heat
   for( int i = 0; i < WIDTH; i++) {
     if (spark[i] < HOT ) {
       int base = HOT * 2;
-      spark[i] = random16( base, MAXHOT );
+      spark[i] = random16( base, MAXHOT )>>2;
+      last[i] = 0;
     }
   }
   
   // 2. Cool all the sparks
   for( int i = 0; i < WIDTH; i++) {
-    spark[i] = qsub8( spark[i], random8(0, COOLING) );
+    spark[i] = qsub8( spark[i], random8(0, COOLING)>>3 );
   }
   
   // 3. Build the stack
@@ -76,7 +81,9 @@ void Fireplace () {
       
       /* The next higher pixel will be "cooler", so calculate
          the drop */
-      unsigned int drop = random8(0,HOT);
+      unsigned int drop, newdrop = random8(0,HOT);
+      last[i] = (last[i] + 2*newdrop)/3;
+      drop = last[i];
       if (drop > heat) heat = 0; // avoid wrap-arounds from going "negative"
       else heat -= drop;
  
