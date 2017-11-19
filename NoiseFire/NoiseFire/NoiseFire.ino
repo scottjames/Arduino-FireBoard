@@ -1,13 +1,14 @@
 #include<FastLED.h>
 
-#define LED_PIN     3
-#define BRIGHTNESS  96
+#define LED_PIN     6
+#define BRIGHTNESS  64
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 
-const uint8_t kMatrixWidth  = 16;
-const uint8_t kMatrixHeight = 16;
-const bool    kMatrixSerpentineLayout = true;
+const uint8_t kMatrixWidth  = 8;
+const uint8_t kMatrixHeight = 8;
+const bool    kMatrixSerpentineLayout = false;
+//const bool    kMatrixSerpentineLayout = true;
 
 
 // This example combines two features of FastLED to produce a remarkable range of
@@ -51,12 +52,14 @@ static uint16_t z;
 // use the z-axis for "time".  speed determines how fast time moves forward.  Try
 // 1 for a very slow moving effect, or 60 for something that ends up looking like
 // water.
-uint16_t speed = 20; // speed is set dynamically once we've started up
+//uint16_t speed = 20; // speed is set dynamically once we've started up
+uint16_t speed = 5; // speed is set dynamically once we've started up
 
 // Scale determines how far apart the pixels in our noise matrix are.  Try
 // changing these values around to see how it affects the motion of the display.  The
 // higher the value of scale, the more "zoomed out" the noise iwll be.  A value
 // of 1 will be so zoomed in, you'll mostly see solid colors.
+//uint16_t scale = 30; // scale is set dynamically once we've started up
 uint16_t scale = 30; // scale is set dynamically once we've started up
 
 // This is the array that we keep our computed noise values in
@@ -66,7 +69,7 @@ CRGBPalette16 currentPalette( PartyColors_p );
 uint8_t       colorLoop = 1;
 
 void setup() {
-  delay(3000);
+  delay(1000);
   LEDS.addLeds<LED_TYPE,LED_PIN,COLOR_ORDER>(leds,NUM_LEDS);
   LEDS.setBrightness(BRIGHTNESS);
 
