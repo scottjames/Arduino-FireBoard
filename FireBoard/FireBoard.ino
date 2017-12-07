@@ -1,25 +1,26 @@
 /**
    FireBoard - fireplace simulation with strips of WS2812 (neopixel) on cardboard.
    Use 14 strips across, with 8 LEDs per strip, in serpentine layout.
+   Using FastLED library ver 3.1.3
 
-   Added kHot and kCool values, set with linear-sweep pot (user can adjust "gas" level)
+   Added kHot and kCool values, set with linear-sweep 50KOhm pot. (user can adjust "gas" level)
 */
 
 #include <FastLED.h>
 
-#define DEBUG 1
+//#define DEBUG 1
 
 /* NeoPixel Shield data pin is always 6. Change for other boards */
-#define CONTROL_PIN 6
-#define GAS_INPUT_POT  A0  //  linear-sweep potentiometer
+#define CONTROL_PIN 10     // LED data signal output.
+#define GAS_INPUT_POT  A0  //  linear-sweep potentiometer voltage divider input
 
 /* Board shape and size configuration. Sheild is 8x5, 40 pixels */
 /* FireBoard is 14 strips across, with 8 LEDs per strip, in serpentine layout */
 #define HEIGHT 9   // LEDs tall per strip
-#define WIDTH 5    // num strips across board
+#define WIDTH 14    // num strips across board
 #define NUM_LEDS   HEIGHT*WIDTH
 
-// 50k voltage divider across 5V. Input to A0.
+// voltage divider across 5V. Input to A0.
 // HOT/COOL for LOW/HIGH 'gas'
 #define LOW_COOL  180
 #define LOW_HOT    10
@@ -73,10 +74,15 @@ void loop() {
 
   readGasControl();
 
+#ifdef DEBUG
   if ( millis() < start_tm + 60e3) // DEBUG FIXME turn off after 30 secs, for testing.
     Fireplace();
   else
     ClearBoard(); // clear LEDs to black.
+#else
+  Fireplace();
+#endif
+
 
   FastLED.show();
   FastLED.delay(FPS_DELAY);
@@ -85,6 +91,7 @@ void loop() {
 
 // clockwise = more gas (larger flames, more heat)
 // anti-clockwise = less gas (smaller flames, less heat)
+// use 50KOhm Potentiometer voltage divider across 5V. Center wiper wired to A0 input.
 void readGasControl() {
   static unsigned long print_tm = 0;
 
@@ -168,7 +175,8 @@ void Fireplace () {
     for ( int j = 0; j < HEIGHT; j++) {
       //orig     leds[(j*WIDTH) + i] = stack[i][j];
       //leds[XY(i, j)] = stack[i][j];
-      leds[ sajXY(i, j) ] = stack[i][j];
+      //leds[ sajXY(i, j) ] = stack[i][j];
+      leds[ sajXYinv(i, j) ] = stack[i][j];
 
     }
   }
@@ -209,6 +217,44 @@ uint16_t sajXY( uint8_t x, uint8_t y)
 
   return i;
 }
+
+
+
+
+/**
+   Visual format: stacks[x][y] to LED[i]
+   XY function with vertical strips (original below is horizontal strips)
+   FEED LOW LEFT (upside down inverse of sajXY)
+   9 Rows: 0..8 ;  14 Cols: 0..13
+       (top)
+     ____  __... output...  (in = input lower left)
+     |  |  |  (row #8)
+     v  ^  v  (data direction)
+ in__|  |__|  (row #0)
+     0  1  2  (col#  0..13)
+*/
+uint16_t sajXYinv( uint8_t x, uint8_t y)
+{
+  uint16_t i;
+
+#if  MATRIX_SERPENTINE_LAYOUT
+  //#warning "Strip is serpentine layout, inverted"
+  if ( x & 0x01) {
+    // Odd cols run forwards
+    i = (x * HEIGHT) + y;
+  } else {
+    // Even cols run backwards
+    uint8_t reverseY = (HEIGHT - 1) - y;
+    i = (x * HEIGHT) + reverseY;
+  }
+#else
+  //#warning "Strip is sequential layout"
+  i = (y * WIDTH) + x;
+#endif
+
+  return i;
+}
+
 
 
 
